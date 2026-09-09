@@ -6,8 +6,12 @@ import org.admin.npapplication.model.PaymentStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import jakarta.persistence.LockModeType;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -20,7 +24,16 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("SELECT o FROM Order o WHERE o.user.id = :userId AND o.id = :orderId")
     Optional<Order> findByUserIdAndId(Long userId, Long orderId);
 
-    List<Order> findByPaymentReference(String paymentReference);
+    Optional<Order> findByPaymentReference(String paymentReference);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT o FROM Order o WHERE o.paymentReference = :paymentReference")
+    Optional<Order> findByPaymentReferenceForUpdate(@Param("paymentReference") String paymentReference);
+
+    List<Order> findByPaymentStatusAndPaymentExpiresAtBefore(
+            PaymentStatus paymentStatus,
+            java.time.LocalDateTime expiresAt
+    );
 
     @Query("SELECT COUNT(o) FROM Order o WHERE o.status = :status")
     Long countByStatus(OrderStatus status);

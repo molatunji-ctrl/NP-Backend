@@ -64,6 +64,9 @@ public class SecurityConfig {
                 .sameSite(cookieSameSite));
 
         RequestMatcher bearerTokenRequest = this::hasBearerToken;
+        RequestMatcher flutterwaveWebhook = request ->
+                request.getMethod().equals(HttpMethod.POST.name())
+                        && request.getRequestURI().equals("/api/payments/flutterwave/webhook");
 
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -72,7 +75,7 @@ public class SecurityConfig {
                         // Bearer tokens are not sent automatically by browsers, so they do
                         // not need cookie-oriented CSRF protection. This preserves Firebase
                         // authentication for the separate admin frontend.
-                        .ignoringRequestMatchers(bearerTokenRequest)
+                        .ignoringRequestMatchers(bearerTokenRequest, flutterwaveWebhook)
                 )
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -88,6 +91,10 @@ public class SecurityConfig {
                                 "/api/auth/register",
                                 "/api/auth/logout"
                         ).permitAll()
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/payments/flutterwave/webhook"
+                        ).permitAll()
                         .requestMatchers("/login/oauth2/**", "/oauth2/**", "/error").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                         .requestMatchers("/api/products/**").hasRole("ADMIN")
@@ -97,6 +104,7 @@ public class SecurityConfig {
                                 "/api/cart/**",
                                 "/api/wishlist/**",
                                 "/api/orders/**",
+                                "/api/payments/**",
                                 "/api/profile/**",
                                 "/api/contact",
                                 "/api/promo/**"

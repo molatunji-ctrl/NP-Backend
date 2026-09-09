@@ -32,6 +32,12 @@ public class ProductService {
         if (product.getName() == null || product.getName().isBlank()) {
             throw new IllegalArgumentException("Product name is required");
         }
+        if (product.getPrice() == null || product.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Product price must be greater than zero");
+        }
+        if (product.getStock() == null || product.getStock() < 0) {
+            throw new IllegalArgumentException("Product stock cannot be negative");
+        }
         return productRepository.save(product);
     }
 
@@ -62,20 +68,21 @@ public class ProductService {
         }
         existing.setFeatured(updatedProduct.getFeatured());
         existing.setActive(updatedProduct.isActive());
+        existing.setPrescriptionRequired(updatedProduct.isPrescriptionRequired());
 
         return productRepository.save(existing);
     }
 
     public void deleteProduct(Long id) {
-        if (!productRepository.existsById(id)) {
-            throw new IllegalArgumentException("Product not found");
-        }
-        productRepository.deleteById(id);
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+        product.setActive(false);
+        productRepository.save(product);
     }
 
     // Public read methods
     public Page<Product> getPublicProducts(Pageable pageable) {
-        return productRepository.findByActiveTrueAndFeaturedTrue(pageable);
+        return productRepository.findByActiveTrue(pageable);
     }
 
     public Page<Product> getFeaturedProducts(Pageable pageable) {
@@ -87,11 +94,11 @@ public class ProductService {
     }
 
     public Page<Product> searchProducts(String query, Pageable pageable) {
-        return productRepository.findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(query, query, pageable);
+        return productRepository.searchActiveProducts(query, pageable);
     }
 
-    public Page<Product> getAllActiveProducts(Pageable pageable) {
-        return productRepository.findByActiveTrue(pageable);
+    public Page<Product> getAllProductsAdmin(Pageable pageable) {
+        return productRepository.findAll(pageable);
     }
 
     public Optional<Product> getPublicProductById(Long id) {

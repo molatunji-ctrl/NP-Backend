@@ -12,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api")
@@ -35,7 +35,8 @@ public class ProductController {
         String[] sortParams = sort.split(",");
         Sort.Direction direction = sortParams.length > 1 && sortParams[1].equalsIgnoreCase("asc") 
                 ? Sort.Direction.ASC : Sort.Direction.DESC;
-        String sortField = sortParams[0];
+        Set<String> allowedSortFields = Set.of("createdAt", "name", "price", "category", "stock");
+        String sortField = allowedSortFields.contains(sortParams[0]) ? sortParams[0] : "createdAt";
         Pageable pageable = PageRequest.of(page, pageSize, Sort.by(direction, sortField));
 
         Page<Product> products;
@@ -99,7 +100,7 @@ public class ProductController {
     ) {
         int pageSize = Math.min(size, 50);
         Pageable pageable = PageRequest.of(page, pageSize, Sort.by(Sort.Direction.DESC, "createdAt"));
-        return ResponseEntity.ok(productService.getAllActiveProducts(pageable));
+        return ResponseEntity.ok(productService.getAllProductsAdmin(pageable));
     }
 
     @GetMapping("/admin/products/{id}")

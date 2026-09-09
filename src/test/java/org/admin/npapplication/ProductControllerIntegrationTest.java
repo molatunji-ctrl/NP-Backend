@@ -11,6 +11,8 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.math.BigDecimal;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -32,14 +34,14 @@ class ProductControllerIntegrationTest {
         Product product = new Product();
         product.setName("Paracetamol 500mg");
         product.setDescription("Pain relief");
-        product.setPrice(2500);
+        product.setPrice(new BigDecimal("2500.00"));
         product.setStock(25);
         product.setCategory("General");
         product.setBadge("Popular");
         product.setFeatured(false);
         product.setActive(true);
 
-        mockMvc.perform(post("/api/products")
+        mockMvc.perform(post("/api/admin/products")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(product)))
@@ -48,7 +50,7 @@ class ProductControllerIntegrationTest {
 
         mockMvc.perform(get("/api/products"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").exists());
+                .andExpect(jsonPath("$.content[0].name").exists());
     }
 
     @Test
@@ -57,10 +59,10 @@ class ProductControllerIntegrationTest {
         Product product = new Product();
         product.setName("Blocked product");
         product.setDescription("Should not create");
-        product.setPrice(1000);
+        product.setPrice(new BigDecimal("1000.00"));
         product.setStock(10);
 
-        mockMvc.perform(post("/api/products")
+        mockMvc.perform(post("/api/admin/products")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(product)))

@@ -129,7 +129,8 @@ public class PromoCodeService {
                     .build();
         }
 
-        if (promoCode.getUsageLimit() != null && promoCode.getUsedCount() >= promoCode.getUsageLimit()) {
+        int usedCount = promoCode.getUsedCount() == null ? 0 : promoCode.getUsedCount();
+        if (promoCode.getUsageLimit() != null && usedCount >= promoCode.getUsageLimit()) {
             return ValidatePromoCodeResponse.builder()
                     .valid(false)
                     .message("Promo code usage limit reached")
@@ -137,7 +138,9 @@ public class PromoCodeService {
         }
 
         BigDecimal orderAmount = request.getOrderAmount() != null ? request.getOrderAmount() : BigDecimal.ZERO;
-        if (orderAmount.compareTo(promoCode.getMinOrderAmount()) < 0) {
+        BigDecimal minimumOrder = promoCode.getMinOrderAmount() == null
+                ? BigDecimal.ZERO : promoCode.getMinOrderAmount();
+        if (orderAmount.compareTo(minimumOrder) < 0) {
             return ValidatePromoCodeResponse.builder()
                     .valid(false)
                     .message("Minimum order amount not met")
@@ -160,7 +163,8 @@ public class PromoCodeService {
     public void incrementUsageCount(String code) {
         Optional<PromoCode> promoCodeOpt = promoCodeRepository.findByCodeIgnoreCase(code);
         promoCodeOpt.ifPresent(promoCode -> {
-            promoCode.setUsedCount(promoCode.getUsedCount() + 1);
+            int currentCount = promoCode.getUsedCount() == null ? 0 : promoCode.getUsedCount();
+            promoCode.setUsedCount(currentCount + 1);
             promoCodeRepository.save(promoCode);
         });
     }

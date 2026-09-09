@@ -27,7 +27,16 @@ public class OrderController {
             @Valid @RequestBody CreateOrderRequest request
     ) {
         OrderDto order = orderService.createOrder(user, request);
-        return ResponseEntity.ok(order);
+        return ResponseEntity.status(201).body(order);
+    }
+
+    @PostMapping("/quote")
+    public ResponseEntity<CheckoutQuoteDto> getCheckoutQuote(
+            @AuthenticationPrincipal User user,
+            @RequestBody(required = false) CheckoutQuoteRequest request
+    ) {
+        String promoCode = request == null ? null : request.getPromoCode();
+        return ResponseEntity.ok(orderService.getCheckoutQuote(user, promoCode));
     }
 
     @GetMapping

@@ -72,7 +72,16 @@ public class DashboardController {
         stats.put("activePromos", promoCodeService.countActivePromos());
 
         // Recent orders (last 5)
-        stats.put("recentOrders", orderRepository.findTop5ByOrderByCreatedAtDesc());
+        stats.put("recentOrders", orderService.getAllOrders(
+                org.springframework.data.domain.PageRequest.of(
+                        0,
+                        5,
+                        org.springframework.data.domain.Sort.by(
+                                org.springframework.data.domain.Sort.Direction.DESC,
+                                "createdAt"
+                        )
+                )
+        ).getContent());
 
         return ResponseEntity.ok(stats);
     }
